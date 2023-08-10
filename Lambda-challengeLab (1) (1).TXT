@@ -1,0 +1,51 @@
+1. Create a S3 bucket. region us-west-2 
+2. uncheck block all public access
+3. Create a topic in SNS.. 
+   -type-standard, 
+    -select access policy -everyone
+4. Create a subscription… 
+    -protocol-email, give your email id 
+    -create
+5. open email to confirm subscription, copy the sns arn and paste it in text editor.
+6. create a Lambda function.. 
+   -Name, 
+   -Version - python  
+   -use existing role- Lambda access role
+   - create
+7. In  Lambda - 
+   -select code tab, copy and paste the below code, in 
+    the code use the sns arn from step5. click deploy.
+   -Add a trigger-> select S3 , the bucket name you created and
+    in event type select all object. click I acknowledge and click add.
+   
+8. Upload a file to S3 bucket
+9. Verify Email notification
+
+_________________________________________________
+
+
+import json
+import boto3
+def lambda_handler(event, context):
+    s3 = boto3.client("s3")
+    sns = boto3.client('sns')
+    print(event)
+    bucket = event['Records'][0]['s3']['bucket']['name']
+    key = event['Records'][0]['s3']['object']['key']
+    print(bucket)
+    print(key)
+    data = s3.get_object(Bucket=bucket, Key=key)
+    print(data)
+    contents = data['Body'].read()
+    total_words = contents.split()
+    print('The word count in the file ' ,key, ' is ' , len(total_words))
+    
+    snsArn = 'paste the sns arn'
+    message = "The word count in the file "+key+" is  " + str(len(total_words))
+    response = sns.publish(TopicArn = snsArn,Message = message ,Subject='Word Count Result')
+
+
+______________________________________________________________________
+
+
+arn:aws:sns:us-west-2:490250229962:mysns
